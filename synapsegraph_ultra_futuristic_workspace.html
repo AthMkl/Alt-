@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en" class="dark h-full" data-theme="linear">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SynapseGraph Ultra - Knowledge Engine</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Libraries: Marked, KaTeX, Mermaid, Highlight.js, D3.js, Three.js, JSZip -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Theme Configurations */
+        :root, [data-theme="linear"] {
+            --bg-main: #090D16;
+            --bg-surface: rgba(22, 27, 34, 0.8);
+            --bg-sidebar: #0D1117;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.2);
+            --text-main: #F0F6FC;
+            --text-muted: #8B949E;
+            --accent-color: #8B5CF6;
+            --accent-glow: rgba(139, 92, 246, 0.35);
+            --node-color: #A78BFA;
+        }
+
+        [data-theme="obsidian"] {
+            --bg-main: #000000;
+            --bg-surface: rgba(18, 18, 18, 0.9);
+            --bg-sidebar: #09090B;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --border-hover: rgba(245, 158, 11, 0.4);
+            --text-main: #FAFAFA;
+            --text-muted: #A1A1AA;
+            --accent-color: #F59E0B;
+            --accent-glow: rgba(245, 158, 11, 0.3);
+            --node-color: #FBBF24;
+        }
+
+        [data-theme="vercel"] {
+            --bg-main: #050505;
+            --bg-surface: rgba(15, 15, 15, 0.95);
+            --bg-sidebar: #0A0A0A;
+            --border-color: #262626;
+            --border-hover: #404040;
+            --text-main: #FFFFFF;
+            --text-muted: #888888;
+            --accent-color: #0070F3;
+            --accent-glow: rgba(0, 112, 243, 0.4);
+            --node-color: #38BDF8;
+        }
+
+        [data-theme="nordic"] {
+            --bg-main: #0F172A;
+            --bg-surface: rgba(30, 41, 59, 0.8);
+            --bg-sidebar: #0B132B;
+            --border-color: rgba(148, 163, 184, 0.12);
+            --border-hover: rgba(56, 189, 248, 0.3);
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --accent-color: #10B981;
+            --accent-glow: rgba(16, 185, 129, 0.35);
+            --node-color: #34D399;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass-panel {
+            background: var(--bg-surface);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+        }
+
+        .wiki-link {
+            color: var(--accent-color);
+            background: var(--accent-glow);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .wiki-link:hover {
+            filter: brightness(1.25);
+            text-decoration: underline;
+        }
+
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        .markdown-preview h1 { font-size: 1.875rem; font-weight: 700; margin-top: 1rem; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.3rem; }
+        .markdown-preview h2 { font-size: 1.5rem; font-weight: 600; margin-top: 0.85rem; margin-bottom: 0.5rem; }
+        .markdown-preview p { margin-bottom: 0.85rem; line-height: 1.6; }
+        .markdown-preview ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.85rem; }
+        .markdown-preview blockquote { border-left: 3px solid var(--accent-color); padding-left: 1rem; color: var(--text-muted); margin: 1rem 0; font-style: italic; }
+        .markdown-preview code:not(pre code) { background: rgba(255,255,255,0.08); padding: 0.15rem 0.4rem; border-radius: 0.25rem; font-family: 'JetBrains Mono', monospace; font-size: 0.875em; color: var(--node-color); }
+        .markdown-preview pre { background: #0D1117 !important; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border-color); overflow-x: auto; }
+        .markdown-preview img { max-width: 100%; border-radius: 0.5rem; margin: 1rem 0; border: 1px solid var(--border-color); }
+    </style>
+</head>
+<body class="h-screen flex flex-col antialiased select-none overflow-hidden">
+
+    <!-- TOP HEADER / NAVBAR -->
+    <header class="h-14 glass-panel border-b border-white/10 px-4 flex items-center justify-between z-30 shrink-0">
+        <!-- Logo & Title -->
+        <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white shadow-lg" style="background: linear-gradient(135deg, var(--accent-color), #3B82F6);">
+                <i class="fa-solid fa-brain text-sm"></i>
+            </div>
+            <div>
+                <div class="flex items-center space-x-2">
+                    <span class="font-bold tracking-tight text-sm text-white">SynapseGraph</span>
+                    <span class="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded border border-white/10 text-emerald-400 bg-emerald-500/10">Ultra</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center: Search & Navigation History -->
+        <div class="hidden lg:flex items-center space-x-4">
+            <div class="flex items-center space-x-1 bg-black/30 p-1 rounded-lg border border-white/10">
+                <button onclick="navigateHistory(-1)" title="Back" class="p-1.5 hover:bg-white/10 rounded text-xs text-gray-300"><i class="fa-solid fa-arrow-left"></i></button>
+                <button onclick="navigateHistory(1)" title="Forward" class="p-1.5 hover:bg-white/10 rounded text-xs text-gray-300"><i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+            <button onclick="openCommandPalette()" class="glass-panel hover:border-white/20 px-3 py-1.5 rounded-lg flex items-center space-x-3 text-xs text-gray-400 transition w-64 justify-between">
+                <span class="flex items-center space-x-2"><i class="fa-solid fa-magnifying-glass text-xs"></i><span>Search notes & commands...</span></span>
+                <kbd class="px-1.5 py-0.5 text-[10px] font-mono bg-white/10 rounded text-gray-300">⌘K</kbd>
+            </button>
+        </div>
+
+        <!-- Right: View Switchers, Modes & Actions -->
+        <div class="flex items-center space-x-2">
+            <!-- View Tabs Switcher -->
+            <div class="flex items-center bg-black/40 p-1 rounded-lg border border-white/10 text-xs">
+                <button onclick="switchView('workspace')" id="tab-workspace" class="px-2.5 py-1 rounded-md text-white bg-white/10 font-medium flex items-center space-x-1.5 transition">
+                    <i class="fa-solid fa-pen-nib"></i>
+                    <span class="hidden sm:inline">Workspace</span>
+                </button>
+                <button onclick="switchView('graph2d')" id="tab-graph2d" class="px-2.5 py-1 rounded-md text-gray-400 hover:text-white font-medium flex items-center space-x-1.5 transition">
+                    <i class="fa-solid fa-circle-nodes"></i>
+                    <span class="hidden sm:inline">2D Graph</span>
+                </button>
+                <button onclick="switchView('graph3d')" id="tab-graph3d" class="px-2.5 py-1 rounded-md text-gray-400 hover:text-white font-medium flex items-center space-x-1.5 transition">
+                    <i class="fa-solid fa-globe"></i>
+                    <span class="hidden sm:inline">3D Nebula</span>
+                </button>
+                <button onclick="switchView('canvas')" id="tab-canvas" class="px-2.5 py-1 rounded-md text-gray-400 hover:text-white font-medium flex items-center space-x-1.5 transition">
+                    <i class="fa-solid fa-object-ungroup"></i>
+                    <span class="hidden sm:inline">Canvas</span>
+                </button>
+                <button onclick="switchView('kanban')" id="tab-kanban" class="px-2.5 py-1 rounded-md text-gray-400 hover:text-white font-medium flex items-center space-x-1.5 transition">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span class="hidden sm:inline">Kanban</span>
+                </button>
+            </div>
+
+            <!-- Interface Mode Selector -->
+            <select id="interface-mode" onchange="setInterfaceMode(this.value)" class="glass-panel text-xs text-white px-2 py-1.5 rounded-lg focus:outline-none cursor-pointer">
+                <option value="hybrid" class="bg-gray-900">Hybrid Mode</option>
+                <option value="zen" class="bg-gray-900">Zen Mode</option>
+                <option value="expert" class="bg-gray-900">Expert Studio</option>
+            </select>
+
+            <!-- Theme Switcher Selector -->
+            <div class="relative group">
+                <button class="glass-panel p-2 rounded-lg hover:border-white/20 text-xs text-white flex items-center space-x-2">
+                    <i class="fa-solid fa-palette text-purple-400"></i>
+                </button>
+                <div class="absolute right-0 mt-1 w-44 glass-panel rounded-xl shadow-2xl py-1.5 hidden group-hover:block border border-white/10 z-50">
+                    <div class="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Themes</div>
+                    <button onclick="setTheme('linear')" class="w-full text-left px-3 py-1.5 text-xs text-gray-200 hover:bg-white/10 flex items-center justify-between"><span>Linear Dark</span><span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span></button>
+                    <button onclick="setTheme('obsidian')" class="w-full text-left px-3 py-1.5 text-xs text-gray-200 hover:bg-white/10 flex items-center justify-between"><span>Obsidian Black</span><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span></button>
+                    <button onclick="setTheme('vercel')" class="w-full text-left px-3 py-1.5 text-xs text-gray-200 hover:bg-white/10 flex items-center justify-between"><span>Vercel Cyber</span><span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span></button>
+                    <button onclick="setTheme('nordic')" class="w-full text-left px-3 py-1.5 text-xs text-gray-200 hover:bg-white/10 flex items-center justify-between"><span>Nordic Frost</span><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span></button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN APP LAYOUT -->
+    <div class="flex-1 flex overflow-hidden relative">
+
+        <!-- LEFT SIDEBAR: FILE EXPLORER & ATTACHMENTS -->
+        <aside id="sidebar" class="w-64 glass-panel border-r border-white/10 flex flex-col shrink-0 transition-all duration-300 z-25">
+            <div class="p-3 border-b border-white/10 flex items-center justify-between bg-black/20">
+                <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Vault Explorer</span>
+                <div class="flex items-center space-x-1">
+                    <button onclick="createNewNote()" title="New Note" class="p-1.5 hover:bg-white/10 rounded text-xs text-white"><i class="fa-solid fa-plus"></i></button>
+                    <label title="Import Folder" class="p-1.5 hover:bg-white/10 rounded text-xs text-gray-400 hover:text-white cursor-pointer">
+                        <i class="fa-solid fa-folder-plus"></i>
+                        <input type="file" webkitdirectory directory multiple class="hidden" onchange="handleFolderImport(event)">
+                    </label>
+                    <button onclick="connectLocalDirectory()" title="Sync Disk Folder" class="p-1.5 hover:bg-white/10 rounded text-xs text-emerald-400"><i class="fa-solid fa-hard-drive"></i></button>
+                </div>
+            </div>
+
+            <!-- Drag & Drop Zone Container -->
+            <div id="drop-zone" class="flex-1 overflow-y-auto p-2 space-y-1 relative" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+                <div id="file-tree" class="space-y-0.5"></div>
+                <div id="drag-overlay" class="absolute inset-0 bg-purple-500/20 backdrop-blur-sm border-2 border-dashed border-purple-400 rounded-lg hidden flex flex-col items-center justify-center text-purple-200 text-xs pointer-events-none">
+                    <i class="fa-solid fa-cloud-arrow-up text-2xl mb-2"></i>
+                    <span>Drop files or folders here</span>
+                </div>
+            </div>
+
+            <!-- Attachments Footer -->
+            <div class="p-3 border-t border-white/10 bg-black/30">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider"><i class="fa-solid fa-paperclip mr-1 text-amber-400"></i> Media Vault</span>
+                    <button onclick="exportVaultZip()" title="Export ZIP" class="text-[10px] text-purple-400 hover:underline"><i class="fa-solid fa-file-zipper mr-1"></i>ZIP</button>
+                </div>
+                <div id="attachments-list" class="space-y-1 max-h-28 overflow-y-auto text-xs">
+                    <p class="text-[11px] text-gray-500 italic">No media attached.</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CENTER WORKSPACE (CONTAINING ALL SWITCHABLE VIEWS) -->
+        <main class="flex-1 flex overflow-hidden relative">
+
+            <!-- VIEW 1: WORKSPACE (Split Editor + Live Preview) -->
+            <div id="view-workspace" class="flex-1 flex h-full">
+                <!-- Editor Sub-Pane -->
+                <div class="w-1/2 border-r border-white/10 flex flex-col h-full bg-black/10">
+                    <div class="h-10 border-b border-white/10 px-4 flex items-center justify-between bg-black/30">
+                        <input id="note-title-input" type="text" placeholder="Note Title..." class="bg-transparent text-sm font-semibold text-white focus:outline-none w-full mr-2">
+                        <div class="flex items-center space-x-1">
+                            <button onclick="toggleVoiceDictation()" id="mic-btn" title="Voice Dictation" class="p-1.5 hover:bg-white/10 rounded text-gray-400 hover:text-white transition"><i class="fa-solid fa-microphone text-xs"></i></button>
+                            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-gray-400">Markdown</span>
+                        </div>
+                    </div>
+                    <div class="flex-1 relative">
+                        <textarea id="markdown-input" placeholder="Start typing... Use [[Wikilinks]] or ![alt](image.png)" class="w-full h-full bg-transparent p-4 text-sm text-gray-200 font-mono resize-none focus:outline-none leading-relaxed"></textarea>
+                    </div>
+                </div>
+
+                <!-- Preview / Viewer Sub-Pane -->
+                <div class="w-1/2 flex flex-col h-full bg-black/20">
+                    <div class="h-10 border-b border-white/10 px-4 flex items-center justify-between bg-black/30">
+                        <span id="breadcrumb-path" class="text-xs font-medium text-gray-400 truncate">Vault / Welcome</span>
+                        <span id="viewer-type" class="text-[10px] text-emerald-400"><i class="fa-solid fa-eye mr-1"></i> Live Render</span>
+                    </div>
+                    <div id="preview-container" class="flex-1 p-6 overflow-y-auto">
+                        <div id="markdown-output" class="markdown-preview"></div>
+                        <iframe id="pdf-viewer" class="w-full h-full hidden rounded-lg border border-white/10"></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 2: 2D KNOWLEDGE GRAPH (D3.js) -->
+            <div id="view-graph2d" class="flex-1 h-full relative hidden">
+                <svg id="graph-svg" class="w-full h-full cursor-grab active:cursor-grabbing"></svg>
+                <div class="absolute bottom-4 left-4 glass-panel p-3 rounded-xl shadow-2xl flex flex-col space-y-2 border border-white/10 text-xs w-64">
+                    <div class="font-semibold text-white flex justify-between items-center"><span>2D Physics & Tuning</span><i class="fa-solid fa-sliders text-purple-400"></i></div>
+                    <div>
+                        <label class="text-[10px] text-gray-400 flex justify-between"><span>Link Distance</span><span id="dist-val">100</span></label>
+                        <input id="slider-dist" type="range" min="30" max="250" value="100" class="w-full accent-purple-500">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-gray-400 flex justify-between"><span>Repulsion Force</span><span id="charge-val">-300</span></label>
+                        <input id="slider-charge" type="range" min="-800" max="-50" value="-300" class="w-full accent-purple-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 3: 3D NEBULA (Three.js) -->
+            <div id="view-graph3d" class="flex-1 h-full relative hidden">
+                <div id="three-container" class="w-full h-full"></div>
+                <div class="absolute top-4 left-4 glass-panel px-4 py-2 rounded-lg text-xs text-white">
+                    <i class="fa-solid fa-globe text-purple-400 mr-2"></i> 3D Knowledge Nebula (Drag to rotate, Scroll to zoom)
+                </div>
+            </div>
+
+            <!-- VIEW 4: SPATIAL CANVAS (Free Whiteboard) -->
+            <div id="view-canvas" class="flex-1 h-full relative bg-[#060911] overflow-hidden">
+                <canvas id="spatial-canvas" class="w-full h-full cursor-crosshair"></canvas>
+                <div class="absolute top-4 left-4 glass-panel px-3 py-2 rounded-lg text-xs text-gray-300 flex items-center space-x-2">
+                    <i class="fa-solid fa-object-ungroup text-purple-400"></i>
+                    <span>Spatial Whiteboard (Drag cards freely)</span>
+                    <button onclick="addCanvasCard()" class="ml-3 px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-white font-medium">+ Add Card</button>
+                </div>
+                <div id="canvas-cards-container" class="absolute inset-0 pointer-events-none"></div>
+            </div>
+
+            <!-- VIEW 5: KANBAN BOARD (Task Manager) -->
+            <div id="view-kanban" class="flex-1 h-full p-6 overflow-x-auto bg-black/20 flex space-x-6">
+                <!-- Column: To Do -->
+                <div class="w-80 glass-panel rounded-2xl flex flex-col h-full border border-white/10">
+                    <div class="p-3 border-b border-white/10 font-semibold text-xs text-gray-300 uppercase tracking-wider flex justify-between items-center">
+                        <span><i class="fa-regular fa-circle text-amber-400 mr-1.5"></i> To Do</span>
+                        <span id="count-todo" class="px-2 py-0.5 rounded-full bg-white/10 text-[10px]">0</span>
+                    </div>
+                    <div id="kanban-todo" class="flex-1 p-3 overflow-y-auto space-y-3"></div>
+                </div>
+                <!-- Column: In Progress -->
+                <div class="w-80 glass-panel rounded-2xl flex flex-col h-full border border-white/10">
+                    <div class="p-3 border-b border-white/10 font-semibold text-xs text-gray-300 uppercase tracking-wider flex justify-between items-center">
+                        <span><i class="fa-solid fa-spinner text-sky-400 mr-1.5"></i> In Progress</span>
+                        <span id="count-progress" class="px-2 py-0.5 rounded-full bg-white/10 text-[10px]">0</span>
+                    </div>
+                    <div id="kanban-progress" class="flex-1 p-3 overflow-y-auto space-y-3"></div>
+                </div>
+                <!-- Column: Done -->
+                <div class="w-80 glass-panel rounded-2xl flex flex-col h-full border border-white/10">
+                    <div class="p-3 border-b border-white/10 font-semibold text-xs text-gray-300 uppercase tracking-wider flex justify-between items-center">
+                        <span><i class="fa-solid fa-circle-check text-emerald-400 mr-1.5"></i> Completed</span>
+                        <span id="count-done" class="px-2 py-0.5 rounded-full bg-white/10 text-[10px]">0</span>
+                    </div>
+                    <div id="kanban-done" class="flex-1 p-3 overflow-y-auto space-y-3"></div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- COMMAND PALETTE MODAL (Ctrl+K) -->
+    <div id="command-palette" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-start justify-center pt-24 hidden">
+        <div class="glass-panel w-full max-w-lg rounded-2xl shadow-2xl border border-white/20 overflow-hidden flex flex-col">
+            <div class="p-3 border-b border-white/10 flex items-center space-x-3">
+                <i class="fa-solid fa-magnifying-glass text-gray-400"></i>
+                <input id="cmd-input" type="text" placeholder="Search notes, media, or run commands..." class="w-full bg-transparent text-sm text-white focus:outline-none">
+                <kbd class="px-1.5 py-0.5 text-[10px] font-mono bg-white/10 rounded text-gray-400">ESC</kbd>
+            </div>
+            <div id="cmd-results" class="max-h-64 overflow-y-auto p-2 space-y-1 text-xs"></div>
+        </div>
+    </div>
+
+    <!-- APPLICATION SCRIPT LOGIC -->
+    <script>
+        // --- APP STATE ---
+        let notes = {};
+        let attachments = {};
+        let activeNoteId = null;
+        let navigationHistory = [];
+        let historyIndex = -1;
+        let db = null;
+        let simulation = null;
+        let threeScene, threeCamera, threeRenderer, threeNodes = [];
+        let canvasCards = [];
+        let isRecording = false;
+        let recognition = null;
+
+        // Initialize Application
+        window.addEventListener('DOMContentLoaded', async () => {
+            await initIndexedDB();
+            await loadVaultFromDB();
+
+            if (Object.keys(notes).length === 0) {
+                seedOnboardingVault();
+            } else {
+                activeNoteId = Object.keys(notes)[0];
+            }
+
+            renderFileTree();
+            renderAttachmentsList();
+            loadActiveNote();
+            
+            // Safe library initializations
+            safeInitGraph2D();
+            safeInitGraph3D();
+            initSpatialCanvas();
+            renderKanban();
+
+            // Event Listeners for Live Editing
+            document.getElementById('markdown-input').addEventListener('input', () => {
+                if (!activeNoteId || !notes[activeNoteId]) return;
+                notes[activeNoteId].content = document.getElementById('markdown-input').value;
+                renderMarkdown();
+                saveNoteToDB(notes[activeNoteId]);
+                updateGraphData();
+                renderKanban();
+            });
+
+            document.getElementById('note-title-input').addEventListener('input', () => {
+                if (!activeNoteId || !notes[activeNoteId]) return;
+                notes[activeNoteId].title = document.getElementById('note-title-input').value;
+                renderFileTree();
+                saveNoteToDB(notes[activeNoteId]);
+                updateGraphData();
+            });
+
+            // Keyboard Shortcuts
+            document.addEventListener('keydown', (e) => {
+                if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                    e.preventDefault();
+                    openCommandPalette();
+                }
+                if (e.key === 'Escape') closeCommandPalette();
+            });
+
+            document.getElementById('cmd-input').addEventListener('input', (e) => {
+                filterCommandPalette(e.target.value);
+            });
+
+            // Physics Sliders
+            document.getElementById('slider-dist').addEventListener('input', (e) => {
+                document.getElementById('dist-val').textContent = e.target.value;
+                if (simulation) simulation.force("link").distance(e.target.value).initialize(simulation.nodes());
+            });
+            document.getElementById('slider-charge').addEventListener('input', (e) => {
+                document.getElementById('charge-val').textContent = e.target.value;
+                if (simulation) simulation.force("charge").strength(e.target.value).initialize(simulation.nodes());
+            });
+        });
+
+        // --- INDEXEDDB STORAGE ---
+        function initIndexedDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open('SynapseUltraDB', 3);
+                req.onupgradeneeded = (e) => {
+                    db = e.target.result;
+                    if (!db.objectStoreNames.contains('notes')) db.createObjectStore('notes', { keyPath: 'id' });
+                    if (!db.objectStoreNames.contains('attachments')) db.createObjectStore('attachments', { keyPath: 'name' });
+                };
+                req.onsuccess = (e) => { db = e.target.result; resolve(); };
+                req.onerror = (e) => reject(e);
+            });
+        }
+
+        async function saveNoteToDB(note) {
+            if (!db) return;
+            const tx = db.transaction('notes', 'readwrite');
+            tx.objectStore('notes').put({ id: note.id, path: note.path, title: note.title, content: note.content });
+        }
+
+        async function loadVaultFromDB() {
+            return new Promise((resolve) => {
+                if (!db) return resolve();
+                const tx = db.transaction(['notes', 'attachments'], 'readonly');
+                tx.objectStore('notes').getAll().onsuccess = (e) => {
+                    e.target.result.forEach(n => { notes[n.id] = n; });
+                };
+                tx.objectStore('attachments').getAll().onsuccess = (e) => {
+                    e.target.result.forEach(att => {
+                        const url = URL.createObjectURL(att.blob);
+                        attachments[att.name] = { name: att.name, type: att.type, blob: att.blob, url: url };
+                    });
+                    resolve();
+                };
+            });
+        }
+
+        // --- ONBOARDING SEED VAULT ---
+        function seedOnboardingVault() {
+            const onboardingNotes = [
+                { id: 'welcome', path: 'Welcome.md', title: '👋 Welcome to SynapseGraph', content: '# Welcome to SynapseGraph Ultra\n\nYour immersive hyper-connected knowledge workspace.\n\n### 🚀 Quick Start Guide:\n- **Wikilinks**: Connect notes easily using `[[Note Title]]` like [[Knowledge Graphs]] or [[Tasks & Kanban]].\n- **Views**: Switch between 2D Force Graph, 3D Nebula, Spatial Whiteboard, and Kanban via the top navigation tabs.\n- **Modes**: Adapt your UI using Zen Mode or Expert Studio in the top bar.\n- **Voice Dictation**: Click the microphone icon in the editor to capture voice notes instantly.' },
+                { id: 'graphs', path: 'Knowledge_Graphs.md', title: '🌐 Knowledge Graphs', content: '# Knowledge Graphs\n\nGraphs represent semantic knowledge networks.\n\n$$\nC = \\sum_{i=1}^{n} w_i \\cdot \\text{node}_i\n$$\n\nLinked with [[Welcome to SynapseGraph]] and [[Tasks & Kanban]].' },
+                { id: 'kanban_guide', path: 'Tasks_Kanban.md', title: '📋 Tasks & Kanban', content: '# Tasks & Kanban Board\n\nAll checklists across your vault are automatically aggregated here!\n\n- [x] Explore SynapseGraph onboarding notes\n- [ ] Try creating a new note with `[[Links]]`\n- [ ] Test the 3D Nebula simulation' }
+            ];
+            onboardingNotes.forEach(n => { notes[n.id] = n; saveNoteToDB(n); });
+            activeNoteId = 'welcome';
+        }
+
+        // --- NAVIGATION & HISTORY ---
+        function selectNote(id, recordHistory = true) {
+            if (!notes[id]) return;
+            if (recordHistory) {
+                navigationHistory = navigationHistory.slice(0, historyIndex + 1);
+                navigationHistory.push(id);
+                historyIndex = navigationHistory.length - 1;
+            }
+            activeNoteId = id;
+            renderFileTree();
+            loadActiveNote();
+        }
+
+        function navigateHistory(direction) {
+            const newIndex = historyIndex + direction;
+            if (newIndex >= 0 && newIndex < navigationHistory.length) {
+                historyIndex = newIndex;
+                selectNote(navigationHistory[historyIndex], false);
+            }
+        }
+
+        function loadActiveNote() {
+            if (!activeNoteId || !notes[activeNoteId]) return;
+            const note = notes[activeNoteId];
+            document.getElementById('note-title-input').value = note.title;
+            document.getElementById('markdown-input').value = note.content;
+            document.getElementById('breadcrumb-path').textContent = `Vault / ${note.title}`;
+            renderMarkdown();
+        }
+
+        function createNewNote() {
+            const id = 'note_' + Date.now();
+            notes[id] = { id: id, path: `Note_${Date.now()}.md`, title: 'Untitled Note', content: '# Untitled Note\n\nStart writing here...' };
+            saveNoteToDB(notes[id]);
+            selectNote(id);
+            updateGraphData();
+            renderKanban();
+        }
+
+        // --- VIEW SWITCHER & INTERFACE MODES ---
+        function switchView(viewName) {
+            ['workspace', 'graph2d', 'graph3d', 'canvas', 'kanban'].forEach(v => {
+                document.getElementById(`view-${v}`).classList.add('hidden');
+                document.getElementById(`tab-${v}`).classList.remove('text-white', 'bg-white/10');
+                document.getElementById(`tab-${v}`).classList.add('text-gray-400');
+            });
+            document.getElementById(`view-${viewName}`).classList.remove('hidden');
+            document.getElementById(`tab-${viewName}`).classList.add('text-white', 'bg-white/10');
+            document.getElementById(`tab-${viewName}`).classList.remove('text-gray-400');
+
+            if (viewName === 'graph2d') { updateGraphData(); }
+            if (viewName === 'graph3d') { onWindowResize3D(); }
+        }
+
+        function setInterfaceMode(mode) {
+            const sidebar = document.getElementById('sidebar');
+            if (mode === 'zen') {
+                sidebar.classList.add('-translate-x-full', 'absolute');
+            } else if (mode === 'expert') {
+                sidebar.classList.remove('-translate-x-full', 'absolute');
+            } else {
+                sidebar.classList.remove('-translate-x-full', 'absolute');
+            }
+        }
+
+        function setTheme(theme) { document.documentElement.setAttribute('data-theme', theme); }
+
+        // --- MARKDOWN RENDERER ---
+        function renderMarkdown() {
+            if (!activeNoteId || !notes[activeNoteId]) return;
+            let raw = notes[activeNoteId].content;
+
+            // Render attachment images ![alt](filename)
+            raw = raw.replace(/!\[(.*?)\]\((.*?)\)/g, (match, alt, fileName) => {
+                const att = attachments[fileName.trim()];
+                if (att) return `<img src="${att.url}" alt="${alt}" />`;
+                return match;
+            });
+
+            // Render [[Wikilinks]]
+            raw = raw.replace(/\[\[(.*?)\]\]/g, (match, targetTitle) => {
+                const targetNote = Object.values(notes).find(n => n.title.toLowerCase() === targetTitle.trim().toLowerCase());
+                if (targetNote) {
+                    return `<span class="wiki-link" onclick="selectNote('${targetNote.id}')"><i class="fa-solid fa-link mr-1 text-[10px]"></i>${targetTitle}</span>`;
+                }
+                return `<span class="wiki-link opacity-60"><i class="fa-regular fa-file text-[10px] mr-1"></i>${targetTitle}</span>`;
+            });
+
+            const parsed = marked.parse(raw);
+            const outputEl = document.getElementById('markdown-output');
+            outputEl.innerHTML = parsed;
+
+            try {
+                katex.renderMathInElement(outputEl, { delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}] });
+            } catch(e) {}
+
+            outputEl.querySelectorAll('pre code').forEach((block) => hljs.highlightElement(block));
+        }
+
+        // --- VOICE DICTATION (SPEECH RECOGNITION) ---
+        function toggleVoiceDictation() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert('Speech recognition is not supported in your browser.');
+                return;
+            }
+            if (isRecording) {
+                recognition.stop();
+                return;
+            }
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRec();
+            recognition.lang = 'en-US';
+            recognition.continuous = true;
+            recognition.interimResults = true;
+
+            recognition.onstart = () => {
+                isRecording = true;
+                document.getElementById('mic-btn').classList.add('text-rose-400', 'animate-pulse');
+            };
+            recognition.onresult = (e) => {
+                let transcript = '';
+                for (let i = e.resultIndex; i < e.results.length; ++i) {
+                    transcript += e.results[i][0].transcript;
+                }
+                const input = document.getElementById('markdown-input');
+                input.value += ' ' + transcript;
+                notes[activeNoteId].content = input.value;
+                renderMarkdown();
+                saveNoteToDB(notes[activeNoteId]);
+            };
+            recognition.onerror = () => stopDictation();
+            recognition.onend = () => stopDictation();
+            recognition.start();
+        }
+
+        function stopDictation() {
+            isRecording = false;
+            document.getElementById('mic-btn').classList.remove('text-rose-400', 'animate-pulse');
+        }
+
+        // --- FILE EXPLORER & FOLDER DROP ---
+        function renderFileTree() {
+            const container = document.getElementById('file-tree');
+            container.innerHTML = '';
+            Object.values(notes).forEach(note => {
+                const el = document.createElement('div');
+                const isActive = note.id === activeNoteId;
+                el.className = `flex items-center justify-between p-2 rounded-lg cursor-pointer text-xs transition ${isActive ? 'bg-white/10 text-white font-medium border border-white/10' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'}`;
+                el.onclick = () => selectNote(note.id);
+                el.innerHTML = `<div class="flex items-center space-x-2 truncate"><i class="fa-regular fa-file-code ${isActive ? 'text-purple-400' : 'text-gray-500'}"></i><span class="truncate">${note.title}</span></div>`;
+                container.appendChild(el);
+            });
+        }
+
+        function handleDragOver(e) { e.preventDefault(); document.getElementById('drag-overlay').classList.remove('hidden'); }
+        function handleDragLeave(e) { document.getElementById('drag-overlay').classList.add('hidden'); }
+        async function handleDrop(e) {
+            e.preventDefault();
+            document.getElementById('drag-overlay').classList.add('hidden');
+            const items = e.dataTransfer.items;
+            for (let i = 0; i < items.length; i++) {
+                const entry = items[i].webkitGetAsEntry ? items[i].webkitGetAsEntry() : null;
+                if (entry) await traverseFileTree(entry, '');
+            }
+            renderFileTree();
+            renderKanban();
+        }
+
+        async function traverseFileTree(item, path) {
+            if (item.isFile) {
+                item.file(async (file) => {
+                    const fullPath = path ? `${path}/${file.name}` : file.name;
+                    if (file.name.endsWith('.md') || file.name.endsWith('.txt')) {
+                        const text = await file.text();
+                        const id = 'note_' + fullPath.replace(/[^a-zA-Z0-9]/g, '_');
+                        notes[id] = { id: id, path: fullPath, title: file.name.replace(/\.[^/.]+$/, ""), content: text };
+                        saveNoteToDB(notes[id]);
+                    } else if (file.type.startsWith('image/')) {
+                        const url = URL.createObjectURL(file);
+                        attachments[file.name] = { name: file.name, type: file.type, blob: file, url: url };
+                    }
+                });
+            } else if (item.isDirectory) {
+                const reader = item.createReader();
+                reader.readEntries(async (entries) => {
+                    for (let i = 0; i < entries.length; i++) {
+                        await traverseFileTree(entries[i], path ? `${path}/${item.name}` : item.name);
+                    }
+                });
+            }
+        }
+
+        function handleFolderImport(e) {
+            const files = e.target.files;
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (file.name.endsWith('.md') || file.name.endsWith('.txt')) {
+                    file.text().then(text => {
+                        const id = 'note_' + file.name.replace(/[^a-zA-Z0-9]/g, '_');
+                        notes[id] = { id: id, path: file.name, title: file.name.replace(/\.[^/.]+$/, ""), content: text };
+                        saveNoteToDB(notes[id]);
+                        renderFileTree();
+                        renderKanban();
+                    });
+                }
+            }
+        }
+
+        async function connectLocalDirectory() {
+            if (!('showDirectoryPicker' in window)) { alert('File System Access API not supported.'); return; }
+            try {
+                const dir = await window.showDirectoryPicker();
+                for await (const entry of dir.values()) {
+                    if (entry.kind === 'file' && entry.name.endsWith('.md')) {
+                        const file = await entry.getFile();
+                        const text = await file.text();
+                        const id = 'note_' + entry.name.replace(/[^a-zA-Z0-9]/g, '_');
+                        notes[id] = { id: id, path: entry.name, title: entry.name.replace(/\.[^/.]+$/, ""), content: text };
+                        saveNoteToDB(notes[id]);
+                    }
+                }
+                renderFileTree();
+                renderKanban();
+            } catch(e) {}
+        }
+
+        function renderAttachmentsList() {
+            const container = document.getElementById('attachments-list');
+            const list = Object.values(attachments);
+            if (list.length === 0) return;
+            container.innerHTML = '';
+            list.forEach(att => {
+                container.innerHTML += `<div class="flex items-center justify-between p-1 rounded hover:bg-white/10 text-gray-300"><span class="truncate">${att.name}</span><button onclick="navigator.clipboard.writeText('![${att.name}](${att.name})')" class="hover:text-purple-400"><i class="fa-solid fa-copy text-[10px]"></i></button></div>`;
+            });
+        }
+
+        async function exportVaultZip() {
+            const zip = new JSZip();
+            Object.values(notes).forEach(n => zip.file(n.path || `${n.title}.md`, n.content));
+            const content = await zip.generateAsync({ type: 'blob' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(content); a.download = 'SynapseVault.zip'; a.click();
+        }
+
+        // --- D3.JS 2D KNOWLEDGE GRAPH ---
+        function safeInitGraph2D(retries = 10) {
+            if (typeof d3 !== 'undefined') {
+                initGraph2D();
+            } else if (retries > 0) {
+                setTimeout(() => safeInitGraph2D(retries - 1), 200);
+            }
+        }
+
+        function initGraph2D() {
+            if (typeof d3 === 'undefined') return;
+            const svgEl = document.getElementById("graph-svg");
+            if (!svgEl) return;
+            
+            const svg = d3.select("#graph-svg");
+            const w = svgEl.clientWidth || 800;
+            const h = svgEl.clientHeight || 600;
+            svg.selectAll("*").remove();
+            const g = svg.append("g");
+            svg.call(d3.zoom().scaleExtent([0.2, 4]).on("zoom", (e) => g.attr("transform", e.transform)));
+
+            simulation = d3.forceSimulation()
+                .force("link", d3.forceLink().id(d => d.id).distance(100))
+                .force("charge", d3.forceManyBody().strength(-300))
+                .force("center", d3.forceCenter(w / 2, h / 2));
+            updateGraphData();
+        }
+
+        function updateGraphData() {
+            if (typeof d3 === 'undefined' || !simulation) return;
+            const svg = d3.select("#graph-svg");
+            const g = svg.select("g");
+            if (g.empty()) return;
+
+            const nodesData = Object.values(notes).map(n => ({ id: n.id, title: n.title }));
+            const linksData = [];
+
+            Object.values(notes).forEach(src => {
+                const m = src.content.match(/\[\[(.*?)\]\]/g);
+                if (m) {
+                    m.forEach(link => {
+                        const targetTitle = link.replace('[[', '').replace(']]', '').trim().toLowerCase();
+                        const tgt = Object.values(notes).find(n => n.title.toLowerCase() === targetTitle);
+                        if (tgt) linksData.push({ source: src.id, target: tgt.id });
+                    });
+                }
+            });
+
+            const link = g.selectAll(".graph-link").data(linksData).join("line").attr("stroke", "rgba(255,255,255,0.2)").attr("stroke-width", 1.5);
+            const node = g.selectAll(".graph-node").data(nodesData, d => d.id).join("g").attr("class", "cursor-pointer").on("click", (e, d) => selectNote(d.id));
+
+            node.selectAll("*").remove();
+            node.append("circle").attr("r", 8).attr("fill", d => d.id === activeNoteId ? "var(--accent-color)" : "var(--node-color)").attr("stroke", "#fff").attr("stroke-width", 1.5);
+            node.append("text").text(d => d.title).attr("x", 12).attr("y", 4).attr("fill", "#fff").attr("font-size", "11px");
+
+            simulation.nodes(nodesData).on("tick", () => {
+                link.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+                node.attr("transform", d => `translate(${d.x},${d.y})`);
+            });
+            simulation.force("link").links(linksData);
+            simulation.alpha(0.3).restart();
+        }
+
+        // --- THREE.JS 3D NEBULA GRAPH ---
+        function safeInitGraph3D(retries = 10) {
+            if (typeof THREE !== 'undefined') {
+                initGraph3D();
+            } else if (retries > 0) {
+                setTimeout(() => safeInitGraph3D(retries - 1), 200);
+            }
+        }
+
+        function initGraph3D() {
+            if (typeof THREE === 'undefined') return;
+            const container = document.getElementById('three-container');
+            if (!container) return;
+            threeScene = new THREE.Scene();
+            threeCamera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+            threeCamera.position.z = 50;
+
+            threeRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            threeRenderer.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(threeRenderer.domElement);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            threeScene.add(ambientLight);
+
+            // Generate 3D nodes
+            Object.values(notes).forEach((n, idx) => {
+                const geometry = new THREE.SphereGeometry(1.2, 32, 32);
+                const material = new THREE.MeshBasicMaterial({ color: 0x8b5cf6 });
+                const sphere = new THREE.Mesh(geometry, material);
+                sphere.position.set((Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40);
+                threeScene.add(sphere);
+                threeNodes.push(sphere);
+            });
+
+            // Orbit controls emulation via mouse drag
+            let isDragging = false, prevMousePos = { x: 0, y: 0 };
+            container.addEventListener('mousedown', (e) => { isDragging = true; prevMousePos = { x: e.clientX, y: e.clientY }; });
+            container.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const deltaX = e.clientX - prevMousePos.x;
+                const deltaY = e.clientY - prevMousePos.y;
+                threeScene.rotation.y += deltaX * 0.005;
+                threeScene.rotation.x += deltaY * 0.005;
+                prevMousePos = { x: e.clientX, y: e.clientY };
+            });
+            window.addEventListener('mouseup', () => { isDragging = false; });
+
+            animate3D();
+        }
+
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+            threeScene.rotation.y += 0.001;
+            threeRenderer.render(threeScene, threeCamera);
+        }
+
+        function onWindowResize3D() {
+            const container = document.getElementById('three-container');
+            if (!container || !threeRenderer) return;
+            threeCamera.aspect = container.clientWidth / container.clientHeight;
+            threeCamera.updateProjectionMatrix();
+            threeRenderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        // --- SPATIAL WHITEBOARD (CANVAS 2D) ---
+        function initSpatialCanvas() {
+            const canvas = document.getElementById('spatial-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+
+            function drawGrid() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+                ctx.lineWidth = 1;
+                const step = 40;
+                for (let x = 0; x < canvas.width; x += step) {
+                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+                }
+                for (let y = 0; y < canvas.height; y += step) {
+                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+                }
+            }
+            drawGrid();
+
+            // Seed default cards
+            canvasCards = [
+                { id: 'c1', title: 'Strategy', content: 'Define core architecture', x: 100, y: 100 },
+                { id: 'c2', title: 'AI Engine', content: 'Integrate LLMs & local search', x: 400, y: 200 }
+            ];
+            renderCanvasCards();
+        }
+
+        function addCanvasCard() {
+            const id = 'card_' + Date.now();
+            canvasCards.push({ id: id, title: 'New Concept', content: 'Freeform thought...', x: Math.random() * 400 + 100, y: Math.random() * 300 + 100 });
+            renderCanvasCards();
+        }
+
+        function renderCanvasCards() {
+            const container = document.getElementById('canvas-cards-container');
+            container.innerHTML = '';
+            canvasCards.forEach(card => {
+                const el = document.createElement('div');
+                el.className = "absolute glass-panel p-4 rounded-xl w-64 shadow-2xl border border-white/10 cursor-move pointer-events-auto";
+                el.style.left = `${card.x}px`;
+                el.style.top = `${card.y}px`;
+                el.innerHTML = `<input type="text" value="${card.title}" class="bg-transparent text-sm font-bold text-white w-full mb-1 focus:outline-none" onchange="updateCardTitle('${card.id}', this.value)"><textarea class="bg-transparent text-xs text-gray-300 w-full h-16 resize-none focus:outline-none" onchange="updateCardContent('${card.id}', this.value)">${card.content}</textarea>`;
+                
+                // Dragging logic
+                let isCardDragging = false, startX, startY;
+                el.onmousedown = (e) => { isCardDragging = true; startX = e.clientX - card.x; startY = e.clientY - card.y; e.stopPropagation(); };
+                window.onmousemove = (e) => {
+                    if (!isCardDragging) return;
+                    card.x = e.clientX - startX; card.y = e.clientY - startY;
+                    el.style.left = `${card.x}px`; el.style.top = `${card.y}px`;
+                };
+                window.onmouseup = () => { isCardDragging = false; };
+
+                container.appendChild(el);
+            });
+        }
+        function updateCardTitle(id, val) { const c = canvasCards.find(x => x.id === id); if(c) c.title = val; }
+        function updateCardContent(id, val) { const c = canvasCards.find(x => x.id === id); if(c) c.content = val; }
+
+        // --- KANBAN TASK MANAGER ---
+        function renderKanban() {
+            const todoEl = document.getElementById('kanban-todo');
+            const progressEl = document.getElementById('kanban-progress');
+            const doneEl = document.getElementById('kanban-done');
+            todoEl.innerHTML = ''; progressEl.innerHTML = ''; doneEl.innerHTML = '';
+
+            let todoCount = 0, progCount = 0, doneCount = 0;
+
+            Object.values(notes).forEach(note => {
+                const lines = note.content.split('\n');
+                lines.forEach((line, idx) => {
+                    if (line.trim().startsWith('- [ ]') || line.trim().startsWith('- [x]')) {
+                        const isDone = line.trim().startsWith('- [x]');
+                        const taskText = line.replace(/- \[[ x]\]/, '').trim();
+                        const card = document.createElement('div');
+                        card.className = "glass-panel p-3 rounded-xl border border-white/10 text-xs shadow-md";
+                        card.innerHTML = `<div class="font-semibold text-white mb-1">${note.title}</div><div class="text-gray-300">${taskText}</div>`;
+                        
+                        if (isDone) {
+                            doneEl.appendChild(card); doneCount++;
+                        } else {
+                            todoEl.appendChild(card); todoCount++;
+                        }
+                    }
+                });
+            });
+
+            document.getElementById('count-todo').textContent = todoCount;
+            document.getElementById('count-progress').textContent = progCount;
+            document.getElementById('count-done').textContent = doneCount;
+        }
+
+        // --- COMMAND PALETTE (CTRL+K) ---
+        function openCommandPalette() { document.getElementById('command-palette').classList.remove('hidden'); document.getElementById('cmd-input').focus(); }
+        function closeCommandPalette() { document.getElementById('command-palette').classList.add('hidden'); }
+        function filterCommandPalette(q) {
+            const res = document.getElementById('cmd-results');
+            res.innerHTML = '';
+            Object.values(notes).filter(n => n.title.toLowerCase().includes(q.toLowerCase())).forEach(n => {
+                const el = document.createElement('div');
+                el.className = "p-2 hover:bg-white/10 rounded cursor-pointer flex justify-between text-white";
+                el.onclick = () => { selectNote(n.id); closeCommandPalette(); };
+                el.innerHTML = `<span>${n.title}</span><span class="text-[10px] text-gray-400">Note</span>`;
+                res.appendChild(el);
+            });
+        }
+    </script>
+</body>
+</html>
